@@ -54,7 +54,7 @@ class BulkDrawIn(BaseModel):
     draws: list[DrawIn]
 
 
-Strategy = Literal["frequency_weighted", "hot", "cold", "balanced", "scarcity", "random"]
+Strategy = Literal["frequency_weighted", "hot", "cold", "balanced", "scarcity", "random", "adaptive"]
 
 
 class PredictRequest(BaseModel):
@@ -93,3 +93,44 @@ class FrequencyStats(BaseModel):
     red: dict[int, int]
     blue: dict[int, int]
     total_draws: int
+
+
+class ModelStateOut(BaseModel):
+    name: str
+    version: int
+    temperature: float
+    learning_rate: float
+    decay: float
+    prior_strength: float
+    last_trained_draw_id: int | None
+    red_alpha: list[float]
+    blue_alpha: list[float]
+    red_probs: list[float]
+    blue_probs: list[float]
+    updated_at: str | None
+
+
+class ModelTrainResponse(BaseModel):
+    trained: int
+    calibrated: int
+    version: int
+
+
+class ModelEventOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    event_type: str
+    version: int
+    draw_id: int | None
+    nll: float | None
+    nll_red: float | None
+    nll_blue: float | None
+    temperature_before: float | None
+    temperature_after: float | None
+    kl_red_vs_model: float | None
+    kl_red_vs_uniform: float | None
+    kl_blue_vs_model: float | None
+    kl_blue_vs_uniform: float | None
+    decision: str | None
+    created_at: datetime

@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .config import settings
 from .database import Base, engine
-from .routers import draws, predictions
+from .routers import draws, model, predictions
 
 app = FastAPI(title="ProbabilityGame API", version="0.1.0")
 
@@ -29,3 +29,4 @@ def health():
 
 app.include_router(draws.router)
 app.include_router(predictions.router)
+app.include_router(model.router)
