@@ -92,6 +92,41 @@ async def upload_csv(file: UploadFile = File(...), db: Session = Depends(get_db)
     return {"inserted_or_updated": len(draws)}
 
 
+@router.put("/{draw_id}", response_model=schemas.DrawOut)
+def update_draw(draw_id: int, payload: schemas.DrawIn, db: Session = Depends(get_db)):
+    draw = crud.get_draw(db, draw_id)
+    if not draw:
+        raise HTTPException(404, "开奖记录不存在")
+    old_period = draw.period
+    try:
+        crud.update_draw(db, draw, payload)
+    except ValueError as e:
+        raise HTTPException(400, str(e)) from e
+    # 老期号关联的预测可能需要清除评估（不再匹配）
+    if old_period != draw.period:
+        crud.clear_evaluations_for_period(db, old_period)
+    # 新期号匹配的预测重新评估
+    crud.evaluate_predictions_against(db, draw)
+    # 历史数据被改了，主模型必须全量重训
+    ml_service.mark_stale_and_retrain(db)
+    db.commit()
+    db.refresh(draw)
+    return draw
+
+
+@router.delete("/{draw_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_draw(draw_id: int, db: Session = Depends(get_db)):
+    draw = crud.get_draw(db, draw_id)
+    if not draw:
+        raise HTTPException(404, "开奖记录不存在")
+    period = draw.period
+    crud.delete_draw(db, draw)
+    crud.clear_evaluations_for_period(db, period)
+    ml_service.mark_stale_and_retrain(db)
+    db.commit()
+    return None
+
+
 @router.get("/stats/frequency", response_model=schemas.FrequencyStats)
 def frequency(window: int | None = None, db: Session = Depends(get_db)):
     draws = crud.all_draws_for_training(db, window=window)

@@ -130,6 +130,37 @@ def predict_with_model(db: Session, count: int, seed: int | None = None):
     return sample_predictions(params, count=count, seed=seed)
 
 
+def train_temp_model_on(
+    draws: list[tuple[list[int], int]],
+    prior_strength: float = 1.0,
+    calibrate_every: int = 5,
+) -> ModelParams:
+    """构建一个**不持久化**的临时模型，按顺序学完给定 draws。
+
+    用于 backtest：以「目标期之前的数据」从零训练一个模型，
+    然后用它来预测目标期。这样不会污染主模型的状态。
+    """
+    params = ModelParams.fresh(prior_strength=prior_strength)
+    for i, (reds, blue) in enumerate(draws, start=1):
+        train_step(params, reds, blue)
+        if i % calibrate_every == 0 and i >= 10:
+            window = draws[max(0, i - CALIBRATION_WINDOW): i]
+            calibrate(params, window)
+    return params
+
+
+def sample_from_params(params: ModelParams, count: int, seed: int | None = None):
+    return sample_predictions(params, count=count, seed=seed)
+
+
+def mark_stale_and_retrain(db: Session) -> dict:
+    """供「编辑/删除历史数据」之后调用：清空模型并重训。"""
+    state_row, _ = persistence.load_or_init(db)
+    persistence.reset(state_row)
+    _log_reset(db, state_row)
+    return train_on_new_draws(db, full_retrain=False)
+
+
 def reset_model(db: Session, prior_strength: float | None = None) -> ModelParams:
     state_row, _ = persistence.load_or_init(db)
     params = persistence.reset(state_row, prior_strength=prior_strength)

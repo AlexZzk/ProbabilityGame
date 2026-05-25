@@ -66,6 +66,15 @@ class PredictRequest(BaseModel):
     window: int | None = Field(default=None, ge=10)
 
 
+class BacktestRequest(BaseModel):
+    """对已有的某一期做回测：只用该期之前的数据训练并预测，然后立即评估。"""
+
+    target_period: str
+    count: int = Field(ge=1, le=100, default=5)
+    strategy: Strategy = "adaptive"
+    notes: str | None = None
+
+
 class PredictionItemOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -87,6 +96,19 @@ class PredictionOut(BaseModel):
     notes: str | None
     created_at: datetime
     items: list[PredictionItemOut]
+
+
+class HistoryGroup(BaseModel):
+    """以期号为单位聚合的预测历史。"""
+
+    target_period: str | None  # None 表示「未指定期号」分组
+    draw: DrawOut | None
+    predictions: list[PredictionOut]
+    # 汇总
+    prediction_count: int
+    item_count: int
+    evaluated_count: int
+    hit_count: int  # 中奖（prize_level > 0）数
 
 
 class FrequencyStats(BaseModel):
