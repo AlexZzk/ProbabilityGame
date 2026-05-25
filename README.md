@@ -18,9 +18,9 @@
 
 ## 技术栈
 
-- 后端: FastAPI + SQLAlchemy 2 + PostgreSQL
+- 后端: FastAPI + SQLAlchemy 2 + MySQL 8（`red_balls` 字段用 JSON 列存储）
 - 前端: React + Vite + TypeScript
-- 部署: docker-compose（DB + API）
+- 部署: docker-compose（MySQL + API）
 
 ## 快速开始
 
@@ -44,6 +44,14 @@ pip install -r requirements.txt
 cp .env.example .env  # 按需修改 DATABASE_URL
 uvicorn app.main:app --reload
 ```
+
+连接本地已有的 MySQL 时，把 `.env` 里的 `DATABASE_URL` 改成你自己的库即可，格式：
+
+```
+mysql+pymysql://<user>:<password>@<host>:3306/<db>?charset=utf8mb4
+```
+
+首次启动会自动 `CREATE TABLE`（数据库本身需要先存在）。要求 MySQL ≥ 5.7（依赖 JSON 列类型）。
 
 API 文档: http://localhost:8000/docs
 

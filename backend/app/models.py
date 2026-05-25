@@ -1,7 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, UniqueConstraint, func
-from sqlalchemy.dialects.postgresql import ARRAY
+from sqlalchemy import JSON, Boolean, DateTime, ForeignKey, Integer, String, UniqueConstraint, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .database import Base
@@ -14,7 +13,7 @@ class Draw(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     period: Mapped[str] = mapped_column(String(32), unique=True, index=True)
-    red_balls: Mapped[list[int]] = mapped_column(ARRAY(Integer), nullable=False)
+    red_balls: Mapped[list[int]] = mapped_column(JSON, nullable=False)
     blue_ball: Mapped[int] = mapped_column(Integer, nullable=False)
     draw_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
@@ -50,7 +49,7 @@ class PredictionItem(Base):
     prediction_id: Mapped[int] = mapped_column(
         ForeignKey("predictions.id", ondelete="CASCADE"), index=True
     )
-    red_balls: Mapped[list[int]] = mapped_column(ARRAY(Integer), nullable=False)
+    red_balls: Mapped[list[int]] = mapped_column(JSON, nullable=False)
     blue_ball: Mapped[int] = mapped_column(Integer, nullable=False)
 
     # 评估结果（在真实开奖录入后回填）
@@ -58,7 +57,7 @@ class PredictionItem(Base):
         ForeignKey("draws.id", ondelete="SET NULL"), nullable=True
     )
     red_hits: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    blue_hit: Mapped[bool | None] = mapped_column(nullable=True)
+    blue_hit: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
     prize_level: Mapped[int | None] = mapped_column(Integer, nullable=True)  # 0=未中奖
 
     prediction: Mapped[Prediction] = relationship(back_populates="items")

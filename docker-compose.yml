@@ -1,24 +1,26 @@
 services:
   db:
-    image: postgres:16-alpine
+    image: mysql:8.0
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
     environment:
-      POSTGRES_USER: probability
-      POSTGRES_PASSWORD: probability
-      POSTGRES_DB: probability_game
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_USER: probability
+      MYSQL_PASSWORD: probability
+      MYSQL_DATABASE: probability_game
     ports:
-      - "5432:5432"
+      - "3306:3306"
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - mysqldata:/var/lib/mysql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U probability -d probability_game"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "probability", "-pprobability"]
       interval: 5s
       timeout: 5s
-      retries: 10
+      retries: 20
 
   api:
     build: ./backend
     environment:
-      DATABASE_URL: postgresql+psycopg2://probability:probability@db:5432/probability_game
+      DATABASE_URL: mysql+pymysql://probability:probability@db:3306/probability_game?charset=utf8mb4
       CORS_ORIGINS: http://localhost:5173
     depends_on:
       db:
@@ -27,4 +29,4 @@ services:
       - "8000:8000"
 
 volumes:
-  pgdata:
+  mysqldata:
