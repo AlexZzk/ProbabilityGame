@@ -2,6 +2,7 @@ import { NavLink, Route, Routes, Navigate } from "react-router-dom";
 import DrawsPage from "./pages/Draws";
 import PredictPage from "./pages/Predict";
 import HistoryPage from "./pages/History";
+import AggregatePage from "./pages/Aggregate";
 import FrequencyPage from "./pages/Frequency";
 import ModelPage from "./pages/Model";
 
@@ -18,6 +19,9 @@ export default function App() {
         <NavLink to="/model" className={({ isActive }) => (isActive ? "active" : "")}>
           预测模型
         </NavLink>
+        <NavLink to="/aggregate" className={({ isActive }) => (isActive ? "active" : "")}>
+          聚合选号
+        </NavLink>
         <NavLink to="/history" className={({ isActive }) => (isActive ? "active" : "")}>
           历史与评估
         </NavLink>
@@ -31,6 +35,7 @@ export default function App() {
           <Route path="/draws" element={<DrawsPage />} />
           <Route path="/predict" element={<PredictPage />} />
           <Route path="/model" element={<ModelPage />} />
+          <Route path="/aggregate" element={<AggregatePage />} />
           <Route path="/history" element={<HistoryPage />} />
           <Route path="/frequency" element={<FrequencyPage />} />
         </Routes>
