@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from .. import crud, schemas
 from ..database import get_db
+from ..ml import service as ml_service
 from ..predictor import predict
 
 router = APIRouter(prefix="/api/predictions", tags=["predictions"])
@@ -12,15 +13,19 @@ router = APIRouter(prefix="/api/predictions", tags=["predictions"])
 
 @router.post("", response_model=schemas.PredictionOut, status_code=status.HTTP_201_CREATED)
 def create_prediction(req: schemas.PredictRequest, db: Session = Depends(get_db)):
-    draws = crud.all_draws_for_training(db, window=req.window)
-    if not draws and req.strategy != "random":
-        raise HTTPException(400, "训练集为空，无法基于历史预测；请先上传开奖数据，或使用 random 策略")
-
-    items = predict(
-        [(d.red_balls, d.blue_ball) for d in draws],
-        count=req.count,
-        strategy=req.strategy,
-    )
+    if req.strategy == "adaptive":
+        # 自适应模型：用持久化的 ModelParams 采样，先确保最新数据已训练
+        ml_service.train_on_new_draws(db)
+        items = ml_service.predict_with_model(db, count=req.count)
+    else:
+        draws = crud.all_draws_for_training(db, window=req.window)
+        if not draws and req.strategy != "random":
+            raise HTTPException(400, "训练集为空，无法基于历史预测；请先上传开奖数据，或使用 random 策略")
+        items = predict(
+            [(d.red_balls, d.blue_ball) for d in draws],
+            count=req.count,
+            strategy=req.strategy,
+        )
     pred = crud.create_prediction(
         db,
         strategy=req.strategy,

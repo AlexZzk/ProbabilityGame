@@ -3,6 +3,7 @@ import DrawsPage from "./pages/Draws";
 import PredictPage from "./pages/Predict";
 import HistoryPage from "./pages/History";
 import FrequencyPage from "./pages/Frequency";
+import ModelPage from "./pages/Model";
 
 export default function App() {
   return (
@@ -13,6 +14,9 @@ export default function App() {
         </NavLink>
         <NavLink to="/predict" className={({ isActive }) => (isActive ? "active" : "")}>
           生成预测
+        </NavLink>
+        <NavLink to="/model" className={({ isActive }) => (isActive ? "active" : "")}>
+          预测模型
         </NavLink>
         <NavLink to="/history" className={({ isActive }) => (isActive ? "active" : "")}>
           历史与评估
@@ -26,6 +30,7 @@ export default function App() {
           <Route path="/" element={<Navigate to="/draws" replace />} />
           <Route path="/draws" element={<DrawsPage />} />
           <Route path="/predict" element={<PredictPage />} />
+          <Route path="/model" element={<ModelPage />} />
           <Route path="/history" element={<HistoryPage />} />
           <Route path="/frequency" element={<FrequencyPage />} />
         </Routes>

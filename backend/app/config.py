@@ -2,7 +2,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    database_url: str = "postgresql+psycopg2://probability:probability@localhost:5432/probability_game"
+    database_url: str = "mysql+pymysql://probability:probability@localhost:3306/probability_game?charset=utf8mb4"
     cors_origins: str = "http://localhost:5173"
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")

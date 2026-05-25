@@ -10,6 +10,12 @@
 4. **历史频率统计**：可视化红/蓝球冷热分布，支持窗口（最近 N 期）。
 
 ### 预测策略
+- **`adaptive` —— 自适应 Dirichlet-Multinomial 模型（推荐，详见 [docs/MODEL.md](docs/MODEL.md)）**
+  - 真正的 ML 模型：有可学习参数（伪计数 α + 温度 T）、有 NLL 损失函数、有在线训练循环
+  - 每录入一期真实开奖会自动训练一步并记录损失
+  - 每 5 步自动自校准：比较「最近经验分布 vs 模型」与「最近经验分布 vs 均匀」的 KL 散度
+    - 模型还不如均匀准 → 升温，回退到更均匀的预测
+    - 模型确实比均匀更准 → 降温，让分布更尖锐
 - `frequency_weighted` —— 按历史频率（Laplace 平滑后）加权随机
 - `hot` / `cold` —— 最热 / 最冷号
 - `balanced` —— 3 热 + 3 冷
@@ -18,9 +24,9 @@
 
 ## 技术栈
 
-- 后端: FastAPI + SQLAlchemy 2 + PostgreSQL
+- 后端: FastAPI + SQLAlchemy 2 + MySQL 8（`red_balls` 字段用 JSON 列存储）
 - 前端: React + Vite + TypeScript
-- 部署: docker-compose（DB + API）
+- 部署: docker-compose（MySQL + API）
 
 ## 快速开始
 
@@ -44,6 +50,14 @@ pip install -r requirements.txt
 cp .env.example .env  # 按需修改 DATABASE_URL
 uvicorn app.main:app --reload
 ```
+
+连接本地已有的 MySQL 时，把 `.env` 里的 `DATABASE_URL` 改成你自己的库即可，格式：
+
+```
+mysql+pymysql://<user>:<password>@<host>:3306/<db>?charset=utf8mb4
+```
+
+首次启动会自动 `CREATE TABLE`（数据库本身需要先存在）。要求 MySQL ≥ 5.7（依赖 JSON 列类型）。
 
 API 文档: http://localhost:8000/docs
 

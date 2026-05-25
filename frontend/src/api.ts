@@ -71,4 +71,47 @@ export const api = {
       body: JSON.stringify(body),
     }),
   listPredictions: () => http<Prediction[]>("/api/predictions?limit=100"),
+
+  // ML model
+  modelState: () => http<ModelState>("/api/model"),
+  modelTrain: (fullRetrain = false) =>
+    http<{ trained: number; calibrated: number; version: number }>(
+      `/api/model/train?full_retrain=${fullRetrain}`,
+      { method: "POST" },
+    ),
+  modelReset: () => http<ModelState>("/api/model/reset", { method: "POST" }),
+  modelEvents: () => http<ModelEvent[]>("/api/model/events?limit=2000"),
 };
+
+export interface ModelState {
+  name: string;
+  version: number;
+  temperature: number;
+  learning_rate: number;
+  decay: number;
+  prior_strength: number;
+  last_trained_draw_id: number | null;
+  red_alpha: number[];
+  blue_alpha: number[];
+  red_probs: number[];
+  blue_probs: number[];
+  updated_at: string | null;
+}
+
+export interface ModelEvent {
+  id: number;
+  event_type: string;
+  version: number;
+  draw_id: number | null;
+  nll: number | null;
+  nll_red: number | null;
+  nll_blue: number | null;
+  temperature_before: number | null;
+  temperature_after: number | null;
+  kl_red_vs_model: number | null;
+  kl_red_vs_uniform: number | null;
+  kl_blue_vs_model: number | null;
+  kl_blue_vs_uniform: number | null;
+  decision: string | null;
+  created_at: string;
+}

@@ -3,6 +3,7 @@ import { api, Prediction } from "../api";
 import { Balls } from "../components/Balls";
 
 const STRATEGIES = [
+  { value: "adaptive", label: "自适应模型（在线学习 + 自校准）★ 推荐" },
   { value: "frequency_weighted", label: "频率加权（按历史频率随机）" },
   { value: "hot", label: "热号（历史出现最多）" },
   { value: "cold", label: "冷号（历史出现最少）" },
@@ -13,7 +14,7 @@ const STRATEGIES = [
 
 export default function PredictPage() {
   const [count, setCount] = useState(5);
-  const [strategy, setStrategy] = useState("frequency_weighted");
+  const [strategy, setStrategy] = useState("adaptive");
   const [targetPeriod, setTargetPeriod] = useState("");
   const [notes, setNotes] = useState("");
   const [window, setWindow] = useState<string>("");

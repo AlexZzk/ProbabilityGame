@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 
 from .. import crud, schemas
 from ..database import get_db
+from ..ml import service as ml_service
 from ..predictor import compute_frequencies
 
 router = APIRouter(prefix="/api/draws", tags=["draws"])
@@ -27,7 +28,9 @@ def count_draws(db: Session = Depends(get_db)):
 @router.post("", response_model=schemas.DrawOut, status_code=status.HTTP_201_CREATED)
 def create_draw(payload: schemas.DrawIn, db: Session = Depends(get_db)):
     draw = crud.upsert_draw(db, payload)
-    updated = crud.evaluate_predictions_against(db, draw)
+    crud.evaluate_predictions_against(db, draw)
+    # 在线训练：把新一期喂给自适应模型
+    ml_service.train_on_new_draws(db)
     db.commit()
     db.refresh(draw)
     return draw
@@ -39,6 +42,7 @@ def bulk_create(payload: schemas.BulkDrawIn, db: Session = Depends(get_db)):
     for d in payload.draws:
         crud.upsert_draw(db, d)
         inserted += 1
+    ml_service.train_on_new_draws(db)
     db.commit()
     return {"inserted_or_updated": inserted}
 
@@ -83,6 +87,7 @@ async def upload_csv(file: UploadFile = File(...), db: Session = Depends(get_db)
     draws = _parse_csv(content)
     for d in draws:
         crud.upsert_draw(db, d)
+    ml_service.train_on_new_draws(db)
     db.commit()
     return {"inserted_or_updated": len(draws)}
 
