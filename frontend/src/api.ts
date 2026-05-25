@@ -49,6 +49,12 @@ export const api = {
   countDraws: () => http<{ total: number }>("/api/draws/count"),
   createDraw: (payload: Omit<Draw, "id" | "created_at">) =>
     http<Draw>("/api/draws", { method: "POST", body: JSON.stringify(payload) }),
+  updateDraw: (id: number, payload: Omit<Draw, "id" | "created_at">) =>
+    http<Draw>(`/api/draws/${id}`, { method: "PUT", body: JSON.stringify(payload) }),
+  deleteDraw: async (id: number) => {
+    const res = await fetch(`/api/draws/${id}`, { method: "DELETE" });
+    if (!res.ok) throw new Error(await res.text());
+  },
   uploadCsv: async (file: File) => {
     const fd = new FormData();
     fd.append("file", file);
@@ -70,7 +76,18 @@ export const api = {
       method: "POST",
       body: JSON.stringify(body),
     }),
+  backtest: (body: {
+    target_period: string;
+    count: number;
+    strategy: string;
+    notes?: string;
+  }) =>
+    http<Prediction>("/api/predictions/backtest", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
   listPredictions: () => http<Prediction[]>("/api/predictions?limit=100"),
+  history: () => http<HistoryGroup[]>("/api/history?limit_periods=200"),
 
   // ML model
   modelState: () => http<ModelState>("/api/model"),
@@ -82,6 +99,16 @@ export const api = {
   modelReset: () => http<ModelState>("/api/model/reset", { method: "POST" }),
   modelEvents: () => http<ModelEvent[]>("/api/model/events?limit=2000"),
 };
+
+export interface HistoryGroup {
+  target_period: string | null;
+  draw: Draw | null;
+  predictions: Prediction[];
+  prediction_count: number;
+  item_count: number;
+  evaluated_count: number;
+  hit_count: number;
+}
 
 export interface ModelState {
   name: string;
