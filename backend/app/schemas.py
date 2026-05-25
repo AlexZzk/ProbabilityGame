@@ -98,6 +98,38 @@ class PredictionOut(BaseModel):
     items: list[PredictionItemOut]
 
 
+AggregateMethod = Literal["consensus", "resample"]
+
+
+class AggregateRequest(BaseModel):
+    """把若干预测聚合成 top_k 注最终组合。
+
+    至少提供 prediction_ids 或 target_period 之一；同时给出时取交集。
+    """
+
+    prediction_ids: list[int] | None = None
+    target_period: str | None = None
+    strategy: str | None = None  # 可选过滤
+    top_k: int = Field(ge=1, le=100, default=10)
+    method: AggregateMethod = "consensus"
+    seed: int | None = None
+
+
+class AggregatedItemOut(BaseModel):
+    red_balls: list[int]
+    blue_ball: int
+    score: float
+
+
+class AggregateResponse(BaseModel):
+    method: str
+    source_predictions: int
+    source_items: int
+    red_votes: dict[int, int]
+    blue_votes: dict[int, int]
+    selected: list[AggregatedItemOut]
+
+
 class HistoryGroup(BaseModel):
     """以期号为单位聚合的预测历史。"""
 

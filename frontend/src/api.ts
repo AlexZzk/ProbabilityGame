@@ -87,6 +87,18 @@ export const api = {
       body: JSON.stringify(body),
     }),
   listPredictions: () => http<Prediction[]>("/api/predictions?limit=100"),
+  aggregatePredictions: (body: {
+    prediction_ids?: number[];
+    target_period?: string;
+    strategy?: string;
+    top_k: number;
+    method: "consensus" | "resample";
+    seed?: number;
+  }) =>
+    http<AggregateResponse>("/api/predictions/aggregate", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
   history: () => http<HistoryGroup[]>("/api/history?limit_periods=200"),
 
   // ML model
@@ -99,6 +111,21 @@ export const api = {
   modelReset: () => http<ModelState>("/api/model/reset", { method: "POST" }),
   modelEvents: () => http<ModelEvent[]>("/api/model/events?limit=2000"),
 };
+
+export interface AggregatedItem {
+  red_balls: number[];
+  blue_ball: number;
+  score: number;
+}
+
+export interface AggregateResponse {
+  method: string;
+  source_predictions: number;
+  source_items: number;
+  red_votes: Record<string, number>;
+  blue_votes: Record<string, number>;
+  selected: AggregatedItem[];
+}
 
 export interface HistoryGroup {
   target_period: string | null;
